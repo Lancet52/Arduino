@@ -1,0 +1,79 @@
+#include "DHT.h"   //Подключаем библиотеку для датчика влажности/температуры                        
+#define DHTPIN 9  //Выбираем пин, к которому подключён датчик влажности/температуры
+DHT dht(DHTPIN, DHT22); //Выбираем модель датчика (в данном случае DHT22)
+
+#include "GyverOLED.h"  //Подключаем библиотеку для OLED дисплея
+GyverOLED<SSD1306_128x64, OLED_NO_BUFFER> oled; //Инициализируем дисплей без буфера
+
+int LEDGR=7;  //Выбор порта для зеленого светодиода
+int LEDYEL=6; //Выбор порта для желтого светодиода
+int LEDRED=5; //Выбор порта для красного светодиода
+
+
+
+void setup() {
+  Serial.begin(9600);
+  dht.begin();  //Инициализация датчика
+  oled.init();  //Иницализация дисплея
+  oled.clear(); //Очистка дисплея
+  oled.setContrast(255);  //Яркость дисплея
+  
+
+  pinMode(LEDGR, OUTPUT);
+  pinMode(LEDYEL, OUTPUT);
+  pinMode(LEDRED, OUTPUT);      
+  
+}
+
+void loop() {
+  
+  float h = dht.readHumidity(); //Переменная влажности в процентах
+  float t = dht.readTemperature(); //Переменная температуры в Цельсиях
+  int hic = dht.computeHeatIndex(t, h, false); //Переменная теплового индекса в Цельсиях
+  
+  oled.setScale(1); //Кегель шрифта
+  oled.setCursorXY(0, 10); //Координаты курсора
+  oled.print("Влажность:");  
+  oled.setCursorXY(0, 25);
+  oled.print(h);  
+  oled.setCursorXY(35, 25);
+  oled.print("%");
+
+  oled.setCursorXY(0, 40);
+  oled.print("Температура:");  
+  oled.setCursorXY(0, 55);
+  oled.print(t);
+  oled.setCursorXY(35, 55);
+  oled.print("*C");
+  
+  oled.setCursorXY(78, 0);
+  oled.print("Тепловой");
+  oled.setCursorXY(83, 10);
+  oled.print("индекс:");
+  oled.setScale(3);
+  oled.setCursorXY(85,25);
+  oled.print(hic);
+  delay(500);
+  
+  if (32 > hic && hic < 41) { //Индикация светодиодов, в зависимости от значения Теплового индекса
+    digitalWrite(LEDGR, HIGH);
+    digitalWrite(LEDYEL, LOW);
+    digitalWrite(LEDRED, LOW);
+    }
+  else if (41 > hic && hic < 54) {
+   
+    digitalWrite(LEDGR, LOW);
+    digitalWrite(LEDYEL, HIGH);
+    digitalWrite(LEDRED, LOW);
+
+  else if (hic > 54) {
+   
+    digitalWrite(LEDGR, LOW);
+    digitalWrite(LEDYEL, LOW);
+    digitalWrite(LEDRED, HIGH);
+   
+  }
+
+   
+
+}
